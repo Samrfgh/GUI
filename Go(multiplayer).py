@@ -2,8 +2,10 @@ from Tkinter import *
 import tkMessageBox
 import subprocess
 from threading import Timer
+
 root = Tk()
-root.title('Five in a row')
+root.title('Go')
+
 old_grid = [
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -54,9 +56,10 @@ canvas = Canvas(root, width = 800, height = 800)
 is_white_turn = False
 canvas.pack()
 
+white_string = [[]]
+black_string = [[]]
+
 def draw_grid():
-
-
     for i in range(40,761,40):
         for j in range(40,761,40):
             canvas.create_line(40, i, 760, i, fill = "black")
@@ -73,8 +76,10 @@ def rounded(x):
     return int(round(float(x) / 40.0) * 40)
 
 def grid_rounded(x):
-
     return int(round(float(x) / 40.0) - 1)
+
+def co_to_pix(x):
+    return int((x + 1) * 40)
 
 def grid_copy(grid):
     new_grid = []
@@ -82,75 +87,106 @@ def grid_copy(grid):
         new_grid.append(i[:])
     return new_grid
 
-def horizontal(grid):
-    for row in grid:
-        for i in range(len(row) - 5):
-            if set(row[i:i + 5]) == set([1]):
-                return 'white'
-            elif set(row[i:i + 5]) == set([2]):
-                return 'black'
-    return 'no'
-
-def vertical(grid):
-    for i in range(len(grid) - 5):
-        for j in range(len(grid)):
-            column = [grid[i][j]] + [grid[i + 1][j]] + [grid[i + 2][j]] + [grid[i + 3][j]] + [grid[i + 4][j]]
-            if set(column) == set([1]):
-                return 'white'
-            elif set(column) == set([2]):
-                return 'black'
-    return 'no'
-
-def ltrdiagonal(grid):
-    for i in range(len(grid) - 4):
-        for j in range(len(grid) - 4):
-            diagonal = [grid[i][j]] + [grid[i+ 1][j + 1]] + [grid[i + 2][j + 2]] + [grid[i + 3][j + 3]] + [grid[i + 4][j + 4]]
-            if set(diagonal) == set([1]):
-                return 'white'
-            elif set(diagonal) == set([2]):
-                return 'black'
-    return 'no'
-
-def rtldiagonal(grid):
-    for i in range(4,len(grid)):
-        for j in range(len(grid) - 4):
-            diagonal = [grid[i][j]] + [grid[i - 1][j + 1]] + [grid[i - 2][j + 2]] + [grid[i - 3][j + 3]] + [grid[i - 4][j + 4]]
-            if set(diagonal) == set([1]):
-                return 'white'
-            elif set(diagonal) == set([2]):
-                return 'black'
-    return 'no'
-
-def who_wins(grid):
-    if horizontal(grid) == 'white':
-        tkMessageBox.showinfo("go","White Wins!")
-    elif horizontal(grid) == 'black':
-        tkMessageBox.showinfo("go","Black Wins!")
-    elif vertical(grid) == 'white':
-        tkMessageBox.showinfo("go","White Wins!")
-    elif vertical(grid) == 'black':
-        tkMessageBox.showinfo("go","Black Wins!")
-    elif ltrdiagonal(grid) == 'white':
-        tkMessageBox.showinfo("go","White Wins!")
-    elif ltrdiagonal(grid) == 'black':
-        tkMessageBox.showinfo("go","Black Wins!")
-    elif rtldiagonal(grid) == 'white':
-        tkMessageBox.showinfo("go","White Wins!")
-    elif rtldiagonal(grid) == 'black':
-        tkMessageBox.showinfo("go","Black Wins!")
-    elif is_draw(grid):
-        tkMessageBox.showinfo("go","Draw!")
-
-def is_draw(grid):
-    for i in grid:
-        for j in i:
-            if j == 0:
-                return False
-    return True
+def copy_of_string(string):
+    new_string = []
+    for i in string:
+        new_string.append(grid_copy(i))
+    return new_string
 
 def valid_position(grid,x,y):
-    if grid[x][y] == 0:
+    if grid[x][y] == 0 and grid[x][y] != 'a' and grid[x][y] != 'b':
         return True
+
+def is_connected(astring,x,y):
+    for i in astring:
+        if [x,y] in liberties(i[0],i[1]):
+            return True
+
+def connected(string,x,y):
+    s = []
+    for i in copy_of_string(string):
+        print('i',i)
+
+        if is_connected(i,x,y):
+
+            for j in i:
+                s.append(j)
+            string.remove(i)
+        continue
+
+
+    s.append([x,y])
+    print('s',s)
+    string.append(s)
+
+    print(string)
+    return string
+
+def new_piece(string,x,y):
+    if len(string[0]) == 0:
+        string[0].append([x,y])
+        print(string)
+        return string
+
+    return connected(string,x,y)
+
+def liberties(x,y):
+    lst = [[x + 1,y],[x - 1,y],[x,y + 1],[x,y - 1]]
+    for i in lst:
+        for j in i:
+            if j == -1 or j == 19:
+                lst.remove(i)
+                break
+    return lst
+
+def surroundings(grid,x,y):
+    lst = []
+    for i in liberties(x,y):
+        lst.append(grid[i[0]][i[1]])
+    return lst
+
+def removing_shapes(astring,num):
+    global go_grid
+    if num == 1:
+        colour = 'white'
+        x = 'a'
+    else:
+        colour = 'black'
+        x = 'b'
+
+    for i in astring:
+        go_grid[i[0]][i[1]] = x
+
+    canvas.delete("all")
+    get_background()
+    draw_grid()
+    print(go_grid)
+    for i in range(len(go_grid)):
+        for j in range(len(go_grid[i])):
+            if go_grid[i][j] == 0 or go_grid[i][j] == 'a' or go_grid[i][j] == 'b':
+                continue
+            elif go_grid[i][j] == 1:
+                piece = canvas.create_oval(co_to_pix(j) - 17, co_to_pix(i) - 17, co_to_pix(j) + 17, co_to_pix(i) + 17, fill = 'white')
+            else:
+                piece = canvas.create_oval(co_to_pix(j) - 17, co_to_pix(i) - 17, co_to_pix(j) + 17, co_to_pix(i) + 17, fill = 'black')
+
+
+
+def capture_string(grid,astring,num):
+    for i in astring:
+        for x in surroundings(grid,i[0],i[1]):
+            if x == 0:
+                return [0]
+
+    print(1)
+    return [1,num]
+
+def capture(grid,string,num):
+    for i in string:
+        if capture_string(grid,i,num)[0] == 1:
+            return removing_shapes(i,num)
+
+
 
 def play_sound():
     subprocess.call(["afplay","/Users/sam/Desktop/python/GUI/click.wav"])
@@ -158,15 +194,17 @@ def play_sound():
 def play(event):
     global is_white_turn
     global go_grid
+    global black_string
+    global white_string
 
     x = grid_rounded(event.x)
     y = grid_rounded(event.y)
-    if is_white_turn == False:
-        color = "black"
-        one_or_two = 2
-    else:
+    if is_white_turn == True:
         color = "white"
         one_or_two = 1
+    else:
+        color = "black"
+        one_or_two = 2
 
     if [rounded(event.y),rounded(event.x)] not in intersections or not valid_position(go_grid,y,x):
         tkMessageBox.showinfo("go", "Invalid location")
@@ -176,15 +214,29 @@ def play(event):
     piece = canvas.create_oval(rounded(event.x) - 17, rounded(event.y) - 17, rounded(event.x) + 17, rounded(event.y) + 17, fill = color)
     t = Timer(0.1,play_sound)
     t.start()
-    who_wins(go_grid)
+    if one_or_two == 2:
+        new_piece(black_string,y,x)
+        if len(white_string[0]) == 0:
+            is_white_turn = not is_white_turn
+            return
+        capture(go_grid,white_string,1)
+        capture(go_grid,black_string,2)
+    else:
+        new_piece(white_string,y,x)
+        capture(go_grid,black_string,2)
+        capture(go_grid,white_string,1)
     is_white_turn = not is_white_turn
 
 def reset(event):
     global go_grid
     global is_white_turn
+    global white_string
+    global black_string
     canvas.delete("all")
+    white_string = [[]]
+    black_string = [[]]
     go_grid = grid_copy(old_grid)
-    is_white_turn = True
+    is_white_turn = False
     get_background()
     draw_grid()
 

@@ -127,7 +127,7 @@ def two_h(grid):
     for i in range(len(grid)):
         for j in range(len(grid) - 2):
             row = grid[i][j:j + 2]
-            if set(row) == set([1]):
+            if set(row) == set([2]):
                 x.append([1,[i,j]])
 
     return x
@@ -137,8 +137,9 @@ def two_v(grid):
     for i in range(len(grid) - 2):
         for j in range(len(grid)):
             column = [grid[i][j]] + [grid[i + 1][j]]
-            if set(column) == set([1]):
+            if set(column) == set([2]):
                 x.append([2,[i,j]])
+                print(x)
 
     return x
 
@@ -147,7 +148,7 @@ def two_ltr(grid):
     for i in range(len(grid) - 1):
         for j in range(len(grid) - 1):
             diagonal = [grid[i][j]] + [grid[i+ 1][j + 1]]
-            if set(diagonal) == set([1]):
+            if set(diagonal) == set([2]):
                 x.append([3,[i,j]])
 
     return x
@@ -157,7 +158,7 @@ def two_rtl(grid):
     for i in range(1,len(grid)):
         for j in range(len(grid) - 1):
             diagonal = [grid[i][j]] + [grid[i - 1][j + 1]]
-            if set(diagonal) == set([1]):
+            if set(diagonal) == set([2]):
                 x.append([4,[i,j]])
 
     return x
@@ -183,7 +184,7 @@ def three_h(grid):
     for i in range(len(grid)):
         for j in range(len(grid) - 3):
             row = grid[i][j:j + 3]
-            if set(row) == set([1]):
+            if set(row) == set([2]):
                 x.append([1,[i,j + 1]])
 
     return x
@@ -193,7 +194,7 @@ def three_v(grid):
     for i in range(len(grid) - 3):
         for j in range(len(grid)):
             column = [grid[i][j]] + [grid[i + 1][j]] + [grid[i + 2][j]]
-            if set(column) == set([1]):
+            if set(column) == set([2]):
                 x.append([2,[i + 1,j]])
 
     return x
@@ -203,7 +204,7 @@ def three_ltr(grid):
     for i in range(len(grid) - 2):
         for j in range(len(grid) - 2):
             diagonal = [grid[i][j]] + [grid[i+ 1][j + 1]] + [grid[i + 2][j + 2]]
-            if set(diagonal) == set([1]):
+            if set(diagonal) == set([2]):
                 x.append([3,[i+ 1,j + 1]])
 
     return x
@@ -213,7 +214,7 @@ def three_rtl(grid):
     for i in range(2,len(grid)):
         for j in range(len(grid) - 2):
             diagonal = [grid[i][j]] + [grid[i - 1][j + 1]] + [grid[i - 2][j + 2]]
-            if set(diagonal) == set([1]):
+            if set(diagonal) == set([2]):
                 x.append([4,[i - 1,j + 1]])
 
     return x
@@ -581,32 +582,31 @@ def AI(x,y):
     h3 = copy(h2)
 
     if if_two(go_grid) == 0 and if_three(go_grid) == 0:
-        print(-2)
         return random_spaces(x,y)
+#COMPLETE CHECK OF EVERYTHING BELOW HERE
+    elif len(is_white_five(go_grid)) == 2:
+        return is_white_five(go_grid)
 
     elif len(is_black_five(go_grid)) == 2:
         return is_black_five(go_grid)
 
-    elif len(is_white_five(go_grid)) == 2:
-        return is_white_five(go_grid)
+    elif len(is_unblocked_four_white(go_grid)) == 2:
+        return is_unblocked_four_white(go_grid)
 
     elif len(is_unblocked_four_black(go_grid)) == 2:
         return is_unblocked_four_black(go_grid)
 
-    elif len(is_unblocked_four_white(go_grid)) == 2:
-        return is_unblocked_four_white(go_grid)
+    elif len(four_and_three('white',go_grid)) == 2:
+        return four_and_three('white',go_grid)
 
     elif len(four_and_three('black',go_grid)) == 2:
         return four_and_three('black',go_grid)
-
-    elif len(four_and_three('black',go_grid)) == 2:
-        return four_and_three('black',go_grid)
-
-    elif len(is_double_threes('black',go_grid)) == 2:
-        return is_double_threes('black',go_grid)
 
     elif len(is_double_threes('white',go_grid)) == 2:
         return is_double_threes('white',go_grid)
+
+    elif len(is_double_threes('black',go_grid)) == 2:
+        return is_double_threes('black',go_grid)
 
     elif if_three(go_grid) != 0:
         while True:
@@ -649,8 +649,8 @@ def Ai_play(y,x):
     global go_grid
 
     i = AI(y,x)
-    go_grid[i[0]][i[1]] = 2
-    play_piece('black',(i[1] + 1) * 40,(i[0] + 1) * 40)
+    go_grid[i[0]][i[1]] = 1
+    play_piece('white',(i[1] + 1) * 40,(i[0] + 1) * 40)
     show_win_result(go_grid)
 
 def play(event):
@@ -662,8 +662,8 @@ def play(event):
     i = 0
     if [rounded(event.x),rounded(event.y)] in intersections:
         if valid_position(go_grid,y,x):
-            go_grid[y][x] = 1
-            play_piece('white',rounded(event.x),rounded(event.y))
+            go_grid[y][x] = 2
+            play_piece('black',rounded(event.x),rounded(event.y))
             i = 1
         else:
             if i == 0:
@@ -684,10 +684,8 @@ def play(event):
 
 def reset(event):
     global go_grid
-    global is_white_turn
     canvas.delete("all")
     go_grid = grid_copy(old_grid)
-    is_white_turn = True
     get_background()
     draw_grid()
 
