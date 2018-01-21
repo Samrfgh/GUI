@@ -105,8 +105,6 @@ def is_connected(astring,x,y):
 def connected(string,x,y):
     s = []
     for i in copy_of_string(string):
-        print('i',i)
-
         if is_connected(i,x,y):
 
             for j in i:
@@ -116,7 +114,6 @@ def connected(string,x,y):
 
 
     s.append([x,y])
-    print('s',s)
     string.append(s)
 
     print(string)
@@ -131,7 +128,7 @@ def new_piece(string,x,y):
     return connected(string,x,y)
 
 def liberties(x,y):
-    lst = [[x + 1,y],[x - 1,y],[x,y + 1],[x,y - 1]]
+    lst = [[x + 1,y],[x - 1,y],[x,y - 1],[x,y + 1]]
     for i in lst:
         for j in i:
             if j == -1 or j == 19:
@@ -142,6 +139,7 @@ def liberties(x,y):
 def surroundings(grid,x,y):
     lst = []
     for i in liberties(x,y):
+        print(i)
         lst.append(grid[i[0]][i[1]])
     return lst
 
@@ -160,7 +158,6 @@ def removing_shapes(astring,num):
     canvas.delete("all")
     get_background()
     draw_grid()
-    print(go_grid)
     for i in range(len(go_grid)):
         for j in range(len(go_grid[i])):
             if go_grid[i][j] == 0 or go_grid[i][j] == 'a' or go_grid[i][j] == 'b':
@@ -172,21 +169,27 @@ def removing_shapes(astring,num):
 
 
 
-def capture_string(grid,astring,num):
+def capture_string(grid,astring):
     for i in astring:
         for x in surroundings(grid,i[0],i[1]):
             if x == 0:
                 return [0]
 
     print(1)
-    return [1,num]
+    return [1]
 
 def capture(grid,string,num):
     for i in string:
-        if capture_string(grid,i,num)[0] == 1:
+        if capture_string(grid,i)[0] == 1:
             return removing_shapes(i,num)
 
+def is_invalid(grid,string,x,y):
+    s = copy_of_string(string)
 
+    new_piece(s,x,y)
+    for i in s:
+        if capture_string(grid,i)[0] == 1:
+            return True
 
 def play_sound():
     subprocess.call(["afplay","/Users/sam/Desktop/python/GUI/click.wav"])
@@ -211,6 +214,17 @@ def play(event):
         return
 
     go_grid[y][x] = one_or_two
+
+    if is_invalid(go_grid,black_string,y,x):
+        go_grid[y][x] = 0
+        tkMessageBox.showinfo("go", "Invalid location")
+        return
+
+    if is_invalid(go_grid,white_string,y,x):
+        go_grid[y][x] = 0
+        tkMessageBox.showinfo("go", "Invalid location")
+        return
+
     piece = canvas.create_oval(rounded(event.x) - 17, rounded(event.y) - 17, rounded(event.x) + 17, rounded(event.y) + 17, fill = color)
     t = Timer(0.1,play_sound)
     t.start()
@@ -220,11 +234,11 @@ def play(event):
             is_white_turn = not is_white_turn
             return
         capture(go_grid,white_string,1)
-        capture(go_grid,black_string,2)
+
     else:
         new_piece(white_string,y,x)
         capture(go_grid,black_string,2)
-        capture(go_grid,white_string,1)
+
     is_white_turn = not is_white_turn
 
 def reset(event):
