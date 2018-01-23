@@ -116,13 +116,11 @@ def connected(string,x,y):
     s.append([x,y])
     string.append(s)
 
-    print(string)
     return string
 
 def new_piece(string,x,y):
     if len(string[0]) == 0:
         string[0].append([x,y])
-        print(string)
         return string
 
     return connected(string,x,y)
@@ -139,7 +137,6 @@ def liberties(x,y):
 def surroundings(grid,x,y):
     lst = []
     for i in liberties(x,y):
-        print(i)
         lst.append(grid[i[0]][i[1]])
     return lst
 
@@ -175,7 +172,6 @@ def capture_string(grid,astring):
             if x == 0:
                 return [0]
 
-    print(1)
     return [1]
 
 def capture(grid,string,num):
@@ -183,12 +179,17 @@ def capture(grid,string,num):
         if capture_string(grid,i)[0] == 1:
             return removing_shapes(i,num)
 
-def is_invalid(grid,string,x,y):
-    s = copy_of_string(string)
-
+def is_invalid(grid,string1,string2,x,y):
+    s = copy_of_string(string1)
+    s2 = copy_of_string(string2)
     new_piece(s,x,y)
-    for i in s:
+
+    for i in s2:
         if capture_string(grid,i)[0] == 1:
+            return False
+
+    for j in s:
+        if capture_string(grid,j)[0] == 1:
             return True
 
 def play_sound():
@@ -215,12 +216,12 @@ def play(event):
 
     go_grid[y][x] = one_or_two
 
-    if is_invalid(go_grid,black_string,y,x):
+    if one_or_two == 2 and is_invalid(go_grid,black_string,white_string,y,x):
         go_grid[y][x] = 0
         tkMessageBox.showinfo("go", "Invalid location")
         return
 
-    if is_invalid(go_grid,white_string,y,x):
+    if one_or_two == 1 and is_invalid(go_grid,white_string,black_string,y,x):
         go_grid[y][x] = 0
         tkMessageBox.showinfo("go", "Invalid location")
         return
